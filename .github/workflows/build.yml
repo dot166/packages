@@ -42,7 +42,7 @@ jobs:
             continue
           fi
 
-          [ -d "apps/packages/${pkg}" ] && mkdir apps/packages/${pkg}
+          [ -f "apps/packages/${pkg}" ] && mkdir apps/packages/${pkg}
           if [ ! -f "apps/packages/${pkg}/common-props.toml" ]; then
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
@@ -50,7 +50,7 @@ jobs:
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
 
-            [ -d "apps/packages/${pkg}/${version}" ] && mkdir apps/packages/${pkg}/${version}
+            [ -f "apps/packages/${pkg}/${version}" ] && mkdir apps/packages/${pkg}/${version}
 
             # Download props.toml for this variant
             curl -L -o "apps/packages/${pkg}/${version}/props.toml" \
