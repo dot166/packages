@@ -3,7 +3,7 @@ name: App Repo Generation
 on:
   workflow_dispatch:
   schedule:
-    - cron: "* */1 * * *"
+    - cron: "0 * * * *"
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
       run: sudo apt update -y
 
     - name: Install Deps
-      run: sudo apt install -y python3-tomli zopfli
+      run: sudo apt install -y python3-tomli zopfli apksigner
 
     - name: Configure git
       run: |
@@ -81,7 +81,6 @@ jobs:
 
     - name: Generate repo metadata
       run: |
-        export PATH=$PATH:$HOME/Android/Sdk/build-tools/35.0.0/
         ./generate.py
         ./process-static
 
