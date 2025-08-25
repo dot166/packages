@@ -1,0 +1,16 @@
+*.der
+*.fsv_sig
+*.json
+*.pem
+*.sig
+*.sjson
+/apps-legacy/
+/apps.0.sec
+/apps/packages/*/*/*
+!/apps/packages/*/*/*.toml
+/download/
+/gmscompat-apps/
+/lock
+/root_apps.grapheneos.org.conf
+/static-tmp/
+apps.0.pub

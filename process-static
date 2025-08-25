@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -o errexit -o nounset -o pipefail
+
+if [[ $# -eq 1 ]]; then
+    fd=$1
+else
+    touch lock
+    exec {fd}< lock
+fi
+
+if ! flock -n $fd; then
+    echo deploy_static already locked >&2
+    exit 1
+fi
+
+rm -rf static-tmp
+#cp -a static static-tmp # no icons available
+cp -a apps/* static-tmp
+
+zopfli_preserve_time() {
+    zopfli "$1"
+    touch -r "$1" "$1.gz"
+}
+export -f zopfli_preserve_time
+
+find static-tmp -regex '.+\.\(ico\|json\|sjson\|svg\)' |
+    parallel -q ::: brotli zopfli_preserve_time :::: -
