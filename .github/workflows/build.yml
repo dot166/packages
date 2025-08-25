@@ -17,7 +17,7 @@ jobs:
       run: sudo apt update -y
 
     - name: Install Deps
-      run: sudo apt install -y python3-tomli
+      run: sudo apt install -y python3-tomli zopfli
 
     - name: Configure git
       run: |
@@ -35,7 +35,7 @@ jobs:
 
     - name: Download GrapheneOS packages
       run: |
-        blacklist=("app.grapheneos.apps" "app.grapheneos.auditor" "app.grapheneos.info")
+        blacklist=("app.grapheneos.apps" "app.attestation.auditor" "app.grapheneos.info")
 
         for pkg in $(jq -r '.packages | keys[]' metadata.sjson); do
           if [[ " ${blacklist[*]} " =~ " ${pkg} " ]]; then
