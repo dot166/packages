@@ -1,0 +1,93 @@
+name: App Repo Generation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "* */1 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+    
+    - name: pull files from storage
+      run: |
+        git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/dot166/apks.git apks
+        cp -r apks/* ./
+        rm -rf apks/
+
+    - name: Fetch metadata.sjson from graphene
+      run: curl -L -o metadata.sjson https://apps.grapheneos.org/metadata.1.0.sjson
+
+    - name: Download GrapheneOS packages
+      run: |
+        blacklist=("app.grapheneos.apps" "app.grapheneos.auditor" "app.grapheneos.info")
+
+        for pkg in $(jq -r '.packages | keys[]' metadata.sjson); do
+          if [[ " ${blacklist[*]} " =~ " ${pkg} " ]]; then
+            continue
+          fi
+
+          mkdir apps/packages/${pkg}
+          if [ ! -f "apps/packages/${pkg}/common-props.toml" ]; then
+            curl -L -o "apps/packages/${pkg}/common-props.toml" \
+              "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
+          fi
+
+          for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
+
+            mkdir apps/packages/${pkg}/${version}
+
+            # Download props.toml for this variant
+            curl -L -o "apps/packages/${pkg}/${version}/props.toml" \
+              "https://apps.grapheneos.org/packages/$pkg/$version/props.toml"
+
+            # Download all APKs and idsig files
+            for apkFile in $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].apks[]" metadata.sjson); do
+              urlBase="https://apps.grapheneos.org/$pkg/$version"
+              curl -L -o "apps/packages/${pkg}/${version}/${apkFile}" "$urlBase/$apkFile"
+              if curl -sfLo/dev/null -r0-0 "$urlBase/$apkFile.idsig"; then
+                curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig" "$urlBase/$apkFile.idsig"
+              else
+                echo "no v4 signature for $pkg"
+              fi
+            done
+          done
+        done
+
+    - name: Commit metadata
+      run: |
+        git add .
+        git commit -m "[AUTO] Update apps" || true
+
+    - name: Push changes to repo
+      uses: ad-m/github-push-action@master
+      with:
+        branch: ${{ github.ref }}
+
+    - name: Generate repo metadata
+      run: |
+        export PATH=$PATH:$HOME/Android/Sdk/build-tools/35.0.0/
+        ./generate.py
+        ./process-static
+
+    - name: Upload site artifact for Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: static-tmp
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+
