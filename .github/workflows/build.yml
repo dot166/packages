@@ -24,6 +24,9 @@ jobs:
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
 
+    - name: clear old metadata
+      run: rm -rf apps/
+
     - name: pull files from storage
       run: |
         git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/dot166/apks.git apks
@@ -58,7 +61,7 @@ jobs:
 
             # Download all APKs and idsig files
             for apkFile in $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].apks[]" metadata.sjson); do
-              urlBase="https://apps.grapheneos.org/$pkg/$version"
+              urlBase="https://apps.grapheneos.org/packages/$pkg/$version"
               curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.gz" "$urlBase/$apkFile.gz"
               cd apps/packages/${pkg}/${version}
               gunzip ${apkFile}.gz
