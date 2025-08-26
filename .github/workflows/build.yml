@@ -59,7 +59,8 @@ jobs:
             # Download all APKs and idsig files
             for apkFile in $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].apks[]" metadata.sjson); do
               urlBase="https://apps.grapheneos.org/$pkg/$version"
-              curl -L -o "apps/packages/${pkg}/${version}/${apkFile}" "$urlBase/$apkFile"
+              curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.gz" "$urlBase/$apkFile.gz"
+              gunzip ${apkFile}.gz
               if curl -sfLo/dev/null -r0-0 "$urlBase/$apkFile.idsig"; then
                 curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig" "$urlBase/$apkFile.idsig"
               else
