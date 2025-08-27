@@ -69,7 +69,7 @@ jobs:
               if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].hasV4Signatures metadata.json) == true ]]; then
                 curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig" "$urlBase/$apkFile.idsig"
               else
-                echo "no v4 signature for $pkg (version $version apk $apkFile )"
+                echo "no v4 signature for $pkg"
               fi
             done
           done
