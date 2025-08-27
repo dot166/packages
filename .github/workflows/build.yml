@@ -66,7 +66,7 @@ jobs:
               cd apps/packages/${pkg}/${version}
               gunzip ${apkFile}.gz
               cd ../../../..
-              if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].hasV4Signatures metadata.json) == true ]]; then
+              if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].hasV4Signatures" metadata.json) == true ]]; then
                 curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig" "$urlBase/$apkFile.idsig"
               fi
             done
