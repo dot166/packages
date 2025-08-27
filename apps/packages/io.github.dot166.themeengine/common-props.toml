@@ -1,0 +1,7 @@
+signatures = ["1bbdd87c7420b7f2f8ecbe20230f7d71b0573ca61e6cf7440dff810a4d19466c"]
+source = "dot166"
+hasFsVeritySignatures = true
+
+description = """
+ThemeEngine is a core component of jLib apps, the ThemeEngine app is used for determining the global theme then sending it to the supported jLib app
+"""
