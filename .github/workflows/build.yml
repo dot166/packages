@@ -17,7 +17,15 @@ jobs:
       run: sudo apt update -y
 
     - name: Install Deps
-      run: sudo apt install -y python3-tomli zopfli android-sdk-build-tools
+      run: sudo apt install -y python3-tomli zopfli
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        packages: 'build-tools;36.0.0'
+
+    - name: Add buildtools to path
+      run: export PATH=$PATH:$HOME/.android/sdk/build-tools/36.0.0/
 
     - name: Configure git
       run: |
@@ -52,6 +60,10 @@ jobs:
           fi
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
+            if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].channel" metadata.sjson) != "stable" ]]; then
+              echo "$pkg $version is not yet stable"
+              continue
+            fi
 
             mkdir apps/packages/${pkg}/${version}
 
