@@ -17,7 +17,7 @@ jobs:
       run: sudo apt update -y
 
     - name: Install Deps
-      run: sudo apt install -y python3-tomli zopfli apksigner aapt2
+      run: sudo apt install -y python3-tomli zopfli android-sdk-build-tools
 
     - name: Configure git
       run: |
