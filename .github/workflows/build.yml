@@ -60,8 +60,10 @@ jobs:
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
           fi
-          curl -L -o "apps/packages/${pkg}/icon.$(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson)" \
-            "https://apps.grapheneos.org/packages/$pkg/icon.$(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson)"
+          if [[ -n $(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson) ]]; then 
+            curl -L -o "apps/packages/${pkg}/icon.$(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson)" \
+              "https://apps.grapheneos.org/packages/$pkg/icon.$(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson)"
+          fi
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
             if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].channel" metadata.sjson) != "stable" ]]; then
