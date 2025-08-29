@@ -25,9 +25,7 @@ jobs:
         packages: 'build-tools;35.0.0'
 
     - name: Add buildtools to path
-      run: | 
-        export PATH=$PATH:$ANDROID_SDK_ROOT/build-tools/35.0.0/
-        echo $PATH
+      run: echo "$ANDROID_SDK_ROOT/build-tools/35.0.0/" >> $GITHUB_PATH
 
     - name: Configure git
       run: |
