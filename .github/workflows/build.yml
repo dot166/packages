@@ -58,7 +58,7 @@ jobs:
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
           fi
-          curl -L -o "apps/packages/${pkg}/icon.webp \
+          curl -L -o "apps/packages/${pkg}/icon.webp" \
             "https://apps.grapheneos.org/packages/$pkg/icon.webp"
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
