@@ -46,7 +46,6 @@ jobs:
 
     - name: Download GrapheneOS packages
       run: |
-        echo $PATH
         blacklist=("app.grapheneos.apps" "app.attestation.auditor" "app.grapheneos.info")
 
         for pkg in $(jq -r '.packages | keys[]' metadata.sjson); do
