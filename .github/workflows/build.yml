@@ -22,7 +22,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: 'build-tools;35.0.0'
+        packages: '"build-tools;35.0.0"'
 
     - name: Add buildtools to path
       run: | 
@@ -60,6 +60,8 @@ jobs:
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
           fi
+          curl -L -o "apps/packages/${pkg}/icon.$(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson)" \
+            "https://apps.grapheneos.org/packages/$pkg/icon.$(jq -r '.packages[\"$pkg\"].iconType' metadata.sjson)"
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
             if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].channel" metadata.sjson) != "stable" ]]; then
