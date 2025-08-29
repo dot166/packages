@@ -22,7 +22,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: '"build-tools;35.0.0"'
+        packages: 'build-tools;35.0.0'
 
     - name: Add buildtools to path
       run: | 
@@ -48,6 +48,7 @@ jobs:
 
     - name: Download GrapheneOS packages
       run: |
+        echo $PATH
         blacklist=("app.grapheneos.apps" "app.attestation.auditor" "app.grapheneos.info")
 
         for pkg in $(jq -r '.packages | keys[]' metadata.sjson); do
