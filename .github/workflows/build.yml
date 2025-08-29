@@ -22,11 +22,11 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: 'build-tools;36.0.0'
+        packages: 'build-tools;35.0.0'
 
     - name: Add buildtools to path
       run: | 
-        export PATH=$PATH:$ANDROID_SDK_ROOT/build-tools/36.0.0/
+        export PATH=$PATH:$ANDROID_SDK_ROOT/build-tools/35.0.0/
         echo $PATH
 
     - name: Configure git
