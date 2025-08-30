@@ -39,6 +39,8 @@ jobs:
       run: |
         git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/dot166/apks.git apks
         cp -r apks/* ./
+        chown $(whoami) apps.0.sec
+        chmod 600 apps.0.sec
         rm -rf apks/
 
     - name: Fetch metadata.sjson from graphene
@@ -58,8 +60,10 @@ jobs:
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
           fi
-          curl -L -o "apps/packages/${pkg}/icon.webp" \
-            "https://apps.grapheneos.org/packages/$pkg/icon.webp"
+          if curl -sfLo/dev/null -r0-0 "https://apps.grapheneos.org/packages/${pkg}/icon.webp"; then
+            curl -L -o "apps/packages/${pkg}/icon.webp" \
+              "https://apps.grapheneos.org/packages/$pkg/icon.webp"
+          fi
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
             if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].channel" metadata.sjson) != "stable" ]]; then
