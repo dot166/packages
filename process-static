@@ -15,7 +15,7 @@ if ! flock -n $fd; then
 fi
 
 rm -rf static-tmp
-#cp -a static static-tmp # no icons available
+mkdir static-tmp #cp -a static static-tmp # no icons available so make directory
 cp -a apps/* static-tmp
 
 zopfli_preserve_time() {
