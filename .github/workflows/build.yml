@@ -13,11 +13,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v5
     
-    - name: update repos
-      run: sudo apt update -y
-
     - name: Install Deps
-      run: sudo apt install -y python3-tomli zopfli fsverity signify
+      run: |
+        sudo apt update -y
+        sudo apt install -y python3-tomli zopfli fsverity signify-openbsd
+        # symlink so your Python script can call "signify"
+        sudo ln -sf /usr/bin/signify-openbsd /usr/local/bin/signify
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
