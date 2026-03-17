@@ -61,9 +61,9 @@ jobs:
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/common-props.toml"
           fi
-          if curl -sfLo/dev/null -r0-0 "https://apps.grapheneos.org/packages/${pkg}/icon.webp"; then
+          if curl -sfLo/dev/null -r0-0 "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/${pkg}/icon.webp"; then
             curl -L -o "apps/packages/${pkg}/icon.webp" \
-              "https://apps.grapheneos.org/packages/$pkg/icon.webp"
+              "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/icon.webp"
           fi
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
@@ -90,11 +90,14 @@ jobs:
             for apkFile in $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].apks[]" metadata.sjson); do
               urlBase="https://apps.grapheneos.org/packages/$pkg/$version"
               curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.gz" "$urlBase/$apkFile.gz"
+              curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.br" "$urlBase/$apkFile.br"
               cd apps/packages/${pkg}/${version}
               gunzip ${apkFile}.gz
               cd ../../../..
               if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].hasV4Signatures" metadata.sjson) == true ]]; then
                 curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig" "$urlBase/$apkFile.idsig"
+                curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig.gz" "$urlBase/$apkFile.idsig.gz"
+                curl -L -o "apps/packages/${pkg}/${version}/${apkFile}.idsig.br" "$urlBase/$apkFile.idsig.br"
               fi
             done
           done
