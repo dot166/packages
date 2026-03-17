@@ -1,7 +1,8 @@
-<html>
-<head><title>404 Not Found</title></head>
-<body>
-<center><h1>404 Not Found</h1></center>
-<hr><center>nginx</center>
-</body>
-</html>
+signatures = ["c6adb8b83c6d4c17d292afde56fd488a51d316ff8f2c11c5410223bff8a7dbb3"]
+source = "GrapheneOS"
+hasFsVeritySignatures = true
+group = "Vanadium"
+noIcon = true
+isTopLevel = false
+showAutoUpdateNotifications = false
+staticDeps = ["app.vanadium.webview >= 548106100"]
