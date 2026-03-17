@@ -56,7 +56,7 @@ jobs:
             continue
           fi
 
-          mkdir apps/packages/${pkg}
+          mkdir -p apps/packages/${pkg}
           if [ ! -f "apps/packages/${pkg}/common-props.toml" ]; then
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
               "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/common-props.toml"
