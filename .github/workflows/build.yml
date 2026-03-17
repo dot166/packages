@@ -59,7 +59,7 @@ jobs:
           mkdir apps/packages/${pkg}
           if [ ! -f "apps/packages/${pkg}/common-props.toml" ]; then
             curl -L -o "apps/packages/${pkg}/common-props.toml" \
-              "https://apps.grapheneos.org/packages/$pkg/common-props.toml"
+              "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/common-props.toml"
           fi
           if curl -sfLo/dev/null -r0-0 "https://apps.grapheneos.org/packages/${pkg}/icon.webp"; then
             curl -L -o "apps/packages/${pkg}/icon.webp" \
@@ -74,9 +74,17 @@ jobs:
 
             mkdir apps/packages/${pkg}/${version}
 
-            # Download props.toml for this variant
-            curl -L -o "apps/packages/${pkg}/${version}/props.toml" \
-              "https://apps.grapheneos.org/packages/$pkg/$version/props.toml"
+            # Download channel.toml for this variant
+            if curl -sfLo/dev/null -r0-0 --fail "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/$version/channel.toml"; then
+              curl -L -o "apps/packages/${pkg}/${version}/channel.toml" \
+                "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/$version/channel.toml"
+            fi
+
+            # props.toml
+            if curl -sfLo/dev/null -r0-0 --fail "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/$version/props.toml"; then
+              curl -L -o "apps/packages/${pkg}/${version}/props.toml" \
+                "https://raw.githubusercontent.com/GrapheneOS/apps.grapheneos.org/refs/heads/main/apps/packages/$pkg/$version/props.toml"
+            fi
 
             # Download all APKs and idsig files
             for apkFile in $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].apks[]" metadata.sjson); do

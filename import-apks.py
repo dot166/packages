@@ -34,7 +34,7 @@ for i in range(1, len(sys.argv)):
 
     if not os.path.isdir(dest_dir):
         os.makedirs(dest_dir)
-        with open(dest_dir + "/props.toml", "w") as f:
+        with open(dest_dir + "/channel.toml", "w") as f:
             f.write("channel = \"alpha\"\n")
 
     if is_split:
@@ -52,3 +52,9 @@ for i in range(1, len(sys.argv)):
         else:
             shutil.copyfile(v4_sig_path, dest_dir + "/base.apk.idsig")
 
+    if not is_split:
+        props_path = path + ".props.toml"
+        if os.path.isfile(props_path):
+            dest_props_path = dest_dir + "/props.toml"
+            shutil.copyfile(props_path, dest_props_path)
+            print("copied " + props_path + " to " + dest_props_path)

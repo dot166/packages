@@ -11,6 +11,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 import tomli
 
 def load_props(dir, name):
@@ -143,8 +144,16 @@ for pkg_name in sorted(os.listdir(packages_dir)):
                     assert abi in all_abis
                 assert len(pkg_abis) == 0
                 pkg_abis.update(abis)
+            elif kv[0].startswith("alt-native-code"):
+                abis = kv[1:]
+                for abi in abis:
+                    assert abi in all_abis
+                    pkg_abis.add(abi)
 
         assert pkg_props.get("minSdk") != None
+
+        for key,value in load_props(pkg_path, "channel").items():
+            pkg_props[key] = value
 
         for key,value in load_props(pkg_path, "props").items():
             pkg_props[key] = value
@@ -292,6 +301,9 @@ metadata = {
 }
 
 metadata_prefix = "apps/metadata.1"
+if len(sys.argv) > 1 and sys.argv[1] == "staging":
+    metadata_prefix = "apps/staging-metadata.1"
+
 metadata_json = metadata_prefix + ".json"
 
 with open(metadata_json, "w") as f:
