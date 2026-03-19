@@ -67,6 +67,11 @@ jobs:
           fi
 
           for version in $(jq -r ".packages[\"$pkg\"].variants | keys[]" metadata.sjson); do
+            if [[ $(jq -r ".packages[\"$pkg\"].variants[\"$version\"].channel" metadata.sjson) != "stable" ]]; then
+              echo "$pkg $version is not yet stable"
+              continue
+            fi
+
             mkdir apps/packages/${pkg}/${version}
 
             # Download channel.toml for this variant
