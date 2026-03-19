@@ -134,8 +134,13 @@ for pkg_name in sorted(os.listdir(packages_dir)):
 
         for line in lines[1:-1]:
             kv = shlex.split(line.decode())
-            if kv[0].startswith("application-label:"):
-                pkg_props["label"] = kv[0].split(":")[1]
+            if kv[0].startswith("application-label"):
+                parts = kv[0].split("-")
+                if len(parts) == 2 and parts[1].startswith("label:"): 
+                    pkg_props["label"] = kv[0].split(":", 1)[1]
+                else:
+                    locale = "-".join(parts[2:]).split(":", 1)[0]
+                    pkg_props[f"label[{locale}]"] = kv[0].split(":", 1)[1]
             elif kv[0].startswith("minSdkVersion"):
                 pkg_props["minSdk"] = int(kv[0].split(":")[1])
             elif kv[0].startswith("native-code"):
@@ -193,6 +198,11 @@ for pkg_name in sorted(os.listdir(packages_dir)):
                     # all apk splits must have the same signature
                     raise Exception("signature mismatch, apk: " + apk_path)
 
+                filename = os.path.basename(apk_path)
+                tree_cmd = ["aapt2", "dump", "xmltree", "--file", "AndroidManifest.xml", base_apk_path]
+                tree_out = subprocess.check_output(tree_cmd).decode("utf-8")
+                id_match = re.search(r"E: application.*?android:label.*?=@(0x[0-9a-fA-F]+)", tree_out, re.DOTALL)
+                target_label_id = id_match.group(1).lower() if id_match else None
                 badging = subprocess.check_output(["aapt2", "dump", "badging", apk_path])
                 lines = badging.split(b"\n")
                 apk_version_code = None
@@ -205,6 +215,24 @@ for pkg_name in sorted(os.listdir(packages_dir)):
                 # all apk splits must have the same version code
                 assert pkg_props["versionCode"] == apk_version_code
 
+                locale_match = re.match(r"split_config\.([a-z]{2}(?:_[a-zA-Z0-9]+)?)\.apk$", filename)
+                if locale_match and target_label_id:
+                    locale = locale_match.group(1)
+                    res_out = subprocess.check_output(["aapt2", "dump", "resources", apk_path]).decode()
+                    in_block = False
+                    for res_line in res_out.splitlines():
+                        if res_line.lower().startswith("    resource " + target_label_id):
+                            in_block = True
+                            continue
+                        if in_block:
+                            if "resource 0x" in res_line: 
+                                break
+                            if f"({locale})" in res_line:
+                                val_match = re.search(r'"([^"]*)"', res_line)
+                                if val_match:
+                                    if f"label[{locale}]" not in pkg_props:
+                                        pkg_props[f"label[{locale}]"] = val_match.group(1)
+                                    break
                 hash = hashlib.new("sha256")
                 with open(apk_path, "rb") as f:
                     hash.update(f.read())
@@ -307,7 +335,7 @@ if len(sys.argv) > 1 and sys.argv[1] == "staging":
 metadata_json = metadata_prefix + ".json"
 
 with open(metadata_json, "w") as f:
-    json.dump(metadata, f, separators=(',', ':'))
+    json.dump(metadata, f, separators=(',', ':'), ensure_ascii=False)
 
 # sign metadata with all available key versions
 key_version = 0
