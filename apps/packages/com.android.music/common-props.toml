@@ -1,0 +1,7 @@
+signatures = ["d3c976d4f3bab2e20f16c88aa46641af73256859d88b953aa1016ac0ace2e482"]
+source = "Dot166"
+hasFsVeritySignatures = true
+
+description = """
+Default Music app, a fork of the AOSP music app that uses Media3.
+"""
