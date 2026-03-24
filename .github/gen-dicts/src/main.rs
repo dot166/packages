@@ -177,8 +177,9 @@ fn process_dict(
             return Err(format!("No dictionary found for {}", job));
         }
     }
-    let status = Command::new("./main.py") // this is the already existing python code, do not convert this bit
+    let status = Command::new("python") // this is the already existing python code, do not convert this bit
         .args(&[
+            "main.py",
             &job,
             &((time / 1000) / 60).to_string(),
             &time.to_string(),
@@ -191,7 +192,7 @@ fn process_dict(
         return Err(format!(
             "python failed for {} {}",
             &job,
-            format!("logs: {}", fs::read_to_string(format!("{}-worker.log", &job)).unwrap())
+            status.code()
         ));
     }
     let data = fs::read(format!("../../LIME/main_{}.dict", &job.to_lowercase())).expect(format!("Unable to read file for {}", &job.to_lowercase()).as_str());
@@ -228,7 +229,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     if !status.success() {
         return Err(format!(
             "Failed to clone mozc: {}",
-            format!("logs: {}", fs::read_to_string("ja-worker.log").unwrap())
+            status.code()
         ));
     }
 
@@ -240,7 +241,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     if !status.success() {
         return Err(format!(
             "Failed to add UT dicts: {}",
-            format!("logs: {}", fs::read_to_string("ja-worker.log").unwrap())
+            status.code()
         ));
     }
 
@@ -284,7 +285,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     if !status.success() {
         return Err(format!(
             "Failed to update mozc deps: {}",
-            format!("logs: {}", fs::read_to_string("ja-worker.log").unwrap())
+            status.code()
         ));
     }
 
@@ -303,7 +304,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     if !status.success() {
         return Err(format!(
             "Failed to build mozc dictionary: {}",
-            format!("logs: {}", fs::read_to_string("ja-worker.log").unwrap())
+            status.code()
         ));
     }
     fs::copy("bazel-bin/data_manager/oss/mozc.data", "../../../../LIME/mozc.data").unwrap();
