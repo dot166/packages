@@ -30,12 +30,12 @@ for i in range(1, len(sys.argv)):
     assert version != None
     assert pkg_name != None
 
-    dest_dir = "apps/packages/" + pkg_name + "/" + version
+    dest_dir = os.path.dirname(os.path.abspath(__file__)) + "/apps/packages/" + pkg_name + "/" + version
 
     if not os.path.isdir(dest_dir):
         os.makedirs(dest_dir)
         with open(dest_dir + "/channel.toml", "w") as f:
-            f.write("channel = \"alpha\"\n")
+            f.write("channel = \"stable\"\n")
 
     if is_split:
         shutil.copy(path, dest_dir)
