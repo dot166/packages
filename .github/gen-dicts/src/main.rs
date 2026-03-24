@@ -190,9 +190,8 @@ fn process_dict(
 
     if !status.success() {
         return Err(format!(
-            "python failed for {} {}",
-            &job,
-            status.code()
+            "python failed for {}",
+            &job
         ));
     }
     let data = fs::read(format!("../../LIME/main_{}.dict", &job.to_lowercase())).expect(format!("Unable to read file for {}", &job.to_lowercase()).as_str());
@@ -227,10 +226,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
         .map_err(|e| format!("Failed to clone mozc: {}", e))?;
 
     if !status.success() {
-        return Err(format!(
-            "Failed to clone mozc: {}",
-            status.code()
-        ));
+        return Err("Failed to clone mozc".to_string());
     }
 
     env::set_current_dir(&Path::new("mozc/src")).unwrap();
@@ -239,10 +235,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
         .map_err(|e| format!("Failed to add UT dicts: {}", e))?;
 
     if !status.success() {
-        return Err(format!(
-            "Failed to add UT dicts: {}",
-            status.code()
-        ));
+        return Err("Failed to add UT dicts".to_string());
     }
 
     env::set_current_dir(&Path::new("../..")).unwrap();
@@ -283,10 +276,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
         .map_err(|e| format!("Failed to update mozc deps: {}", e))?;
 
     if !status.success() {
-        return Err(format!(
-            "Failed to update mozc deps: {}",
-            status.code()
-        ));
+        return Err("Failed to update mozc deps".to_string());
     }
 
     let status = Command::new("bazelisk"
@@ -302,10 +292,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
         .map_err(|e| format!("Failed to build mozc dictionary: {}", e))?;
 
     if !status.success() {
-        return Err(format!(
-            "Failed to build mozc dictionary: {}",
-            status.code()
-        ));
+        return Err("Failed to build mozc dictionary".to_string());
     }
     fs::copy("bazel-bin/data_manager/oss/mozc.data", "../../../../LIME/mozc.data").unwrap();
     env::set_current_dir(&Path::new("../..")).unwrap();
