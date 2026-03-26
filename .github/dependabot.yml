@@ -8,8 +8,3 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
- 
-  - package-ecosystem: "cargo" # See documentation for possible values
-    directory: "/.github/gen-dicts/" # Location of package manifests
-    schedule:
-      interval: "daily"

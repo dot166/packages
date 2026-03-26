@@ -1,1 +1,0 @@
-.github/gen-dicts/dicts/mozcdic-ut.txt filter=lfs diff=lfs merge=lfs -text

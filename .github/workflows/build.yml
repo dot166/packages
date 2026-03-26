@@ -16,7 +16,7 @@ jobs:
     - name: Install Deps
       run: |
         sudo apt update -y
-        sudo apt install -y zopfli fsverity signify-openbsd
+        sudo apt install -y python3-tomli zopfli fsverity signify-openbsd
         # symlink so your Python script can call "signify"
         sudo ln -sf /usr/bin/signify-openbsd /usr/local/bin/signify
 
@@ -24,12 +24,6 @@ jobs:
       uses: android-actions/setup-android@v4
       with:
         packages: 'build-tools;35.0.0'
-      
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.14'
-        pip-install: jaconv regex spylls tomli
 
     - name: Add buildtools to path
       run: echo "$ANDROID_SDK_ROOT/build-tools/35.0.0/" >> $GITHUB_PATH
@@ -112,12 +106,6 @@ jobs:
       run: |
         git add .
         git commit -m "[AUTO] Update apps" || true
-
-    - name: Build dicts for LIME
-      run: |
-        cd .github/gen-dicts
-        cargo update
-        cargo run
 
     - name: Push changes to repo
       uses: ad-m/github-push-action@master
