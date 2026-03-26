@@ -17,11 +17,6 @@ struct Dict {
     formatversion: i32,
 }
 
-#[derive(Serialize, Deserialize)]
-struct FinalDict {
-    dicts: Vec<Dict>,
-}
-
 fn main() {
     let contents = Vec::from([
         "en_GB",
@@ -54,10 +49,7 @@ fn main() {
     }
 
     println!("Successfully processed {} dictionaries.", dicts.len());
-    let dict_list = FinalDict {
-        dicts,
-    };
-    fs::write("../../dicts.json", serde_json::to_string(&dict_list).unwrap()).unwrap();
+    fs::write("../../dicts.json", serde_json::to_string(&dicts).unwrap()).unwrap();
     env::set_current_dir(&Path::new("../..")).unwrap();
     let status = Command::new("git")
         .arg("add")
@@ -367,10 +359,10 @@ fn hun_loc(loc: String, is_dir: bool) -> String {
 fn get_previous_json_for_dict(job: &String) -> Result<Dict, String> {
     let json = fs::read_to_string("../../dicts.json")
         .map_err(|e| format!("json read: {}", e)).unwrap();
-    let dicts: FinalDict =
+    let dicts: Vec<Dict> =
         serde_json::from_str(&json)
         .map_err(|e| format!("JSON parse error: {}", e)).unwrap();
-    for dict in dicts.dicts {
+    for dict in dicts {
         if &dict.locale == job {
             return Ok(dict);
         }
