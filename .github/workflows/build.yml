@@ -21,7 +21,7 @@ jobs:
         sudo ln -sf /usr/bin/signify-openbsd /usr/local/bin/signify
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      uses: android-actions/setup-android@v4
       with:
         packages: 'build-tools;35.0.0'
       
