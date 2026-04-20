@@ -30,3 +30,9 @@ export -f zopfli_preserve_time
 
 find static-tmp -regex '.+\.\(ico\|json\|sjson\|svg\)' |
     parallel -q ::: brotli zopfli_preserve_time :::: -
+
+# update tv guide for iptv
+git clone --depth 1 -b master https://github.com/iptv-org/epg.git
+cd epg
+npm install
+npm run grab --- --sites=sky.com --maxConnections=99 --output=../static-tmp/tv.xml
