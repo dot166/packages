@@ -34,5 +34,6 @@ find static-tmp -regex '.+\.\(ico\|json\|sjson\|svg\)' |
 # update tv guide for iptv
 git clone --depth 1 -b master https://github.com/iptv-org/epg.git
 cd epg
+sed -i "s/const networkId = '64257' \/\/ Great London/const networkId = '64408'/g" sites/freeview.co.uk/freeview.co.uk.config.js
 npm install
-npm run grab --- --sites=sky.com --maxConnections=99 --output=../static-tmp/tv.xml
+npm run grab --- --sites=freeview.co.uk --maxConnections=99 --output=../static-tmp/tv.xml
