@@ -36,4 +36,5 @@ git clone --depth 1 -b master https://github.com/iptv-org/epg.git
 cd epg
 sed -i "s/const networkId = '64257' \/\/ Great London/const networkId = '64408'/g" sites/freeview.co.uk/freeview.co.uk.config.js
 npm install
+npm run channels:parse --- --config=./sites/freeview.co.uk/freeview.co.uk.config.js --output=./sites/freeview.co.uk/freeview.co.uk.channels.xml
 npm run grab --- --sites=freeview.co.uk --maxConnections=99 --output=../static-tmp/tv.xml
