@@ -32,23 +32,8 @@ find static-tmp -regex '.+\.\(ico\|json\|sjson\|svg\)' |
     parallel -q ::: brotli zopfli_preserve_time :::: -
 
 # update tv guide for iptv
-git clone --depth 1 -b master https://github.com/iptv-org/epg.git
+git clone --depth 1 -b master https://github.com/dot166/epg.git # temporarily use my fork until https://github.com/iptv-org/epg/pull/3101 is merged
 cd epg
-sed -i "s/const networkId = '64257' \/\/ Great London/const networkId = '64408'/g" sites/freeview.co.uk/freeview.co.uk.config.js
-sed -i "s/64257#4164/64257#4220/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257#17536/64257#17596/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257#8261/64257#8266/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257#18112/64257#18172/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257#17604/64257#17856/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257#8361/64257#8366/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257#32842/64408#4860/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/ITV1.uk@London/ITV1.uk/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/LondonLive.uk@SD/BBCAlba.uk/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/London/Scotland/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/Lon/Scot/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/ITV1/STV/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/<\/channels>/<channel site=\"freeview.co.uk\" site_id=\"64408#4924\" lang=\"en\" xmltv_id=\"BBCScotland.uk\">BBC Scotland<\/channel>  <channel site=\"freeview.co.uk\" site_id=\"64408#17212\" lang=\"en\" xmltv_id=\"BBCScotland.uk@HD\">BBC Scotland HD<\/channel><\/channels>/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
-sed -i "s/64257/64408/g" sites/freeview.co.uk/freeview.co.uk.channels.xml
 npm install
 npm run channels:parse --- --config=./sites/freeview.co.uk/freeview.co.uk.config.js --output=./sites/freeview.co.uk/freeview.co.uk.channels.xml
 npm run grab --- --sites=freeview.co.uk --maxConnections=99 --output=../static-tmp/tv.xml
