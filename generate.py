@@ -227,12 +227,16 @@ for pkg_name in sorted(os.listdir(packages_dir)):
                         if in_block:
                             if "resource 0x" in res_line: 
                                 break
-                            if f"({locale})" in res_line:
-                                val_match = re.search(r'"([^"]*)"', res_line)
-                                if val_match:
-                                    if f"label[{locale}]" not in pkg_props:
-                                        pkg_props[f"label[{locale}]"] = val_match.group(1)
-                                    break
+                            if "(" in res_line and ")" in res_line:
+                                found_config = res_line.split("(")[1].split(")")[0]
+                                if found_config == locale or found_config.startswith(f"{locale}-"):
+                                    val_match = re.search(r'"([^"]*)"', res_line)
+                                    if val_match:
+                                        clean_locale = found_config.replace("-r", "_")
+                                        print(clean_locale)
+                                        prop_key = f"label[{clean_locale}]"
+                                        if prop_key not in pkg_props:
+                                            pkg_props[prop_key] = val_match.group(1)
                 hash = hashlib.new("sha256")
                 with open(apk_path, "rb") as f:
                     hash.update(f.read())
