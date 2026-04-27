@@ -36,4 +36,4 @@ git clone --depth 1 -b master https://github.com/iptv-org/epg.git
 cd epg
 npm install
 npm run channels:parse --- --config=./sites/freeview.co.uk/freeview.co.uk.config.js --output=./sites/freeview.co.uk/freeview.co.uk.channels.xml
-npm run grab --- --sites freeview.co.uk --maxConnections 198 --days 7 --output ../static-tmp/tv.xml
+npm run grab --- --sites freeview.co.uk --maxConnections 50 --days 7 --output ../static-tmp/tv.xml
