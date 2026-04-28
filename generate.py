@@ -232,7 +232,7 @@ for pkg_name in sorted(os.listdir(packages_dir)):
                                 if found_config == locale or found_config.startswith(f"{locale}-"):
                                     val_match = re.search(r'"([^"]*)"', res_line)
                                     if val_match:
-                                        clean_locale = found_config.replace("-r", "_")
+                                        clean_locale = found_config.replace("-r", "-")
                                         print(clean_locale)
                                         prop_key = f"label[{clean_locale}]"
                                         if prop_key not in pkg_props:
