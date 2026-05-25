@@ -12,13 +12,13 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tomli
+import tomllib
 
 def load_props(dir, name):
     path = os.path.join(dir, name + ".toml")
     if os.path.isfile(path):
         with open(path, "rb") as f:
-            return tomli.load(f)
+            return tomllib.load(f)
     else:
         return {}
 
@@ -260,7 +260,7 @@ for pkg_name in sorted(os.listdir(packages_dir)):
             pkg_props["hasV4Signatures"] = True
 
         if len(pkg_abis) != 0:
-            pkg_props["abis"] = list(pkg_abis)
+            pkg_props["abis"] = sorted(pkg_abis)
 
         pkg_msg = "channel: " + pkg_props["channel"] + ", minSdk: " + str(pkg_props["minSdk"])
         maxSdk = pkg_props.get("maxSdk")

@@ -16,7 +16,7 @@ jobs:
     - name: Install Deps
       run: |
         sudo apt update -y
-        sudo apt install -y python3-tomli zopfli fsverity signify-openbsd
+        sudo apt install -y zopfli fsverity signify-openbsd
         # symlink so your Python script can call "signify"
         sudo ln -sf /usr/bin/signify-openbsd /usr/local/bin/signify
 
