@@ -15,3 +15,4 @@
 /logs/
 /*.root_apps.grapheneos.org.conf
 /static-tmp/
+/update-FeliCa.sh
