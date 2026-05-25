@@ -23,10 +23,10 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v4
       with:
-        packages: 'build-tools;35.0.0'
+        packages: 'build-tools;37.0.0'
 
     - name: Add buildtools to path
-      run: echo "$ANDROID_SDK_ROOT/build-tools/35.0.0/" >> $GITHUB_PATH
+      run: echo "$ANDROID_SDK_ROOT/build-tools/37.0.0/" >> $GITHUB_PATH
 
     - name: Configure git
       run: |
