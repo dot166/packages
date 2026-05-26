@@ -1,5 +1,5 @@
 signatures = ["be51dbf4fec89bd32846457b13b7300876af5594d2874dee026904965ae4a6cb"]
-source = "Google" # use Google for now, once upstream releases next AppStore, change to FeliCa
+source = "Mirror"
 
 staticDeps = ["com.google.android.pixelnfc"]
 
