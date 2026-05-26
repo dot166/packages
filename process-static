@@ -17,6 +17,8 @@ fi
 rm -rf static-tmp
 mkdir static-tmp #cp -a static static-tmp # no icons available so make directory
 cp -a apps/* static-tmp
+cp -a LIME static-tmp
+cp -a dicts.json static-tmp
 
 # drop unused sha256 and toml files while preserving directory timestamps
 find static-tmp -regextype posix-extended -regex '.*\.(sha256|toml)' -delete
