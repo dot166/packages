@@ -3,7 +3,7 @@ name: App Repo Generation
 on:
   workflow_dispatch:
   schedule:
-    - cron: "59 */2 * * *"
+    - cron: "0 */2 * * *"
 
 jobs:
   build:
@@ -116,7 +116,6 @@ jobs:
     - name: Build dicts for LIME
       run: |
         cd .github/gen-dicts
-        cargo update
         cargo run
 
     - name: Push changes to repo
