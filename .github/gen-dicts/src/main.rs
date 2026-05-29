@@ -163,13 +163,13 @@ fn process_dict(
 
     if !changes_aff || !changes_dic {
         // no update needed, use previous record
-        if let Ok(dict) = get_previous_json_for_dict(&job) {
-            return Ok(dict);
+        return if let Ok(dict) = get_previous_json_for_dict(&job) {
+            Ok(dict)
         } else {
-            return Err(format!("No dictionary found for {}", job));
+            Err(format!("No dictionary found for {}", job))
         }
     }
-    let status = Command::new("python") // this is the already existing python code, do not convert this bit
+    let status = Command::new("python") // this is the already existing Python code, do not convert this bit
         .args(&[
             "main.py",
             &job,
@@ -294,7 +294,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     let digest = md5::compute(data);
     let checksum = format!("{:x}", digest);
     let version = (time / 1000) / 60;
-    let id = format!("mozc.data");
+    let id = "main:ja".to_string();
     let metadata = fs::metadata("../../LIME/mozc.data").unwrap();
     let filesize = metadata.len();
     let dict = Dict {
