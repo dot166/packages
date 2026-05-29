@@ -1,11 +1,15 @@
 use serde::{Deserialize, Serialize};
-use std::{fs, process::Command};
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::env;
 use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::{fs, process::Command};
+use std::collections::HashMap;
+use chrono::{NaiveDate, NaiveTime};
+use regex::Regex;
+use std::error::Error;
 
 #[derive(Serialize, Deserialize, Clone)]
-struct Dict {
+struct Dictionary {
     id: String,
     locale: String,
     description: String,
@@ -17,11 +21,112 @@ struct Dict {
     formatversion: i32,
 }
 
+struct DictionaryPair {
+    time: i64,
+    url: String,
+}
+
+#[derive(Debug, Clone)]
+struct DictEntry {
+    url: String,
+    date: NaiveDate,
+}
+
+#[derive(Debug)]
+struct LanguageComparison {
+    normal: Option<DictEntry>,
+    experimental: Option<DictEntry>,
+}
+
+fn dict_new() -> Result<HashMap<String, DictionaryPair>, Box<dyn Error>> {
+    let raw_url = "https://codeberg.org/Helium314/aosp-dictionaries/raw/branch/main/README.md";
+    let client = reqwest::blocking::Client::builder()
+        .user_agent("gen-dicts/0.1.0 (https://github.com/dot166/packages)")
+        .build()?;
+    let body = client.get(raw_url).send()?.text()?;
+    let row_regex = Regex::new(
+        r"(?x)
+        ^\|\s*([^|]+?)\s*
+        \|\s*\[([^]]+)]\(([^)]+)\)\s*
+        \|\s*(yes|no)\s*
+        \|\s*[^|]+\s*
+        \|\s*[^|]+\s*
+        \|\s*(\d{4}-\d{2}-\d{2})\s*\|
+    ",
+    )?;
+    let mut language_groups: HashMap<String, LanguageComparison> = HashMap::new();
+    for line in body.lines() {
+        if let Some(caps) = row_regex.captures(line) {
+            let language = caps[1].trim().to_string();
+            let dict_type = caps[2].trim().to_string();
+            let url = caps[3].trim().to_string();
+            let is_experimental = &caps[4] == "yes";
+            let date = match NaiveDate::parse_from_str(&caps[5], "%Y-%m-%d") {
+                Ok(d) => d,
+                Err(_) => continue, // Skip rows with invalid dates
+            };
+            if dict_type != "main" {
+                continue;
+            }
+            let entry = DictEntry {
+                url,
+                date,
+            };
+            let comp = language_groups.entry(language).or_insert(LanguageComparison {
+                normal: None,
+                experimental: None,
+            });
+            if is_experimental {
+                comp.experimental = Some(entry);
+            } else {
+                comp.normal = Some(entry);
+            }
+        }
+    }
+    let mut languages: Vec<&String> = language_groups.keys().collect();
+    languages.sort();
+    let mut results: HashMap<String, DictionaryPair> = HashMap::new();
+    let time_zero = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    for lang in languages {
+        if let Some(comp) = language_groups.get(lang) {
+            match (&comp.normal, &comp.experimental) {
+                (Some(normal), Some(experimental)) => {
+                    if experimental.date > normal.date {
+                        results.insert(format_locale(&experimental.url), DictionaryPair{ url: experimental.url.clone(), time: experimental.date.and_time(time_zero).and_utc().timestamp_millis() });
+                    } else {
+                        results.insert(format_locale(&normal.url), DictionaryPair{ url: normal.url.clone(), time: normal.date.and_time(time_zero).and_utc().timestamp_millis() });
+                    }
+                }
+                (Some(normal), None) => {
+                    results.insert(format_locale(&normal.url), DictionaryPair{ url: normal.url.clone(), time: normal.date.and_time(time_zero).and_utc().timestamp_millis() });
+                }
+                (None, Some(experimental)) => {
+                    results.insert(format_locale(&experimental.url), DictionaryPair{ url: experimental.url.clone(), time: experimental.date.and_time(time_zero).and_utc().timestamp_millis() });
+                }
+                (None, None) => {
+                    eprintln!("No dictionary available for {}", lang);
+                }
+            }
+        }
+    }
+
+    Ok(results)
+}
+
 fn main() {
     let contents = Vec::from([
         // stuff I use
-        "en_GB",
+        "en_gb",
         "ja",
+        // bundled AOSP dicts
+        "en",
+        "de",
+        "es",
+        "fr",
+        "it",
+        "pt_br",
+        "ru",
+        // potentially ones I want to support in the future go below this comment
     ]);
 
     let jobs: Vec<String> = contents
@@ -30,17 +135,13 @@ fn main() {
         .collect();
 
     let mut dicts = Vec::new();
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    let time = since_the_epoch.as_millis();
+
     for job in jobs {
-        let result: Result<Dict, String>;
+        let result: Result<Dictionary, String>;
         if job != "ja" {
-            result = process_dict(job.clone(), time);
+            result = process_dict(job.clone());
         } else {
-            result = build_ja_dict_via_mozc(time);
+            result = build_ja_dict_via_mozc();
         }
         if let Err(e) = result {
             panic!("{} failure: {}", job, e);
@@ -73,15 +174,11 @@ fn main() {
 
 fn process_dict(
     job: String,
-    time: u128,
-) -> Result<Dict, String> {
-    let dir_name = hun_loc(job.clone(), true);
-    let dict_name = hun_loc(job.clone(), false);
-    let api_url = format!(
-        "https://raw.githubusercontent.com/LibreOffice/dictionaries/refs/heads/master/{}/{}.dic",
-        dir_name.clone(),
-        dict_name.clone()
-    );
+) -> Result<Dictionary, String> {
+    let dict_map = dict_new().unwrap();
+    let dict = dict_map.get(&get_loc(&job)).unwrap();
+    let api_url = dict.url.clone();
+    let time = dict.time.clone();
 
     let client = reqwest::blocking::Client::builder()
         .user_agent("gen-dicts/0.1.0 (https://github.com/dot166/packages)")
@@ -94,43 +191,23 @@ fn process_dict(
         .map_err(|e| format!("HTTP error: {}", e))?;
 
     if !resp.status().is_success() {
-        return Err(format!("GitHub returned {}", resp.status()));
+        return Err(format!("Codeberg returned {}", resp.status()));
     }
 
     let body = resp.text()
         .map_err(|e| format!("read body: {}", e))?;
 
-    let _ = fs::write(format!("dicts/{}.dic", dict_name.clone()), &body);
-
-    let api_url = format!(
-        "https://raw.githubusercontent.com/LibreOffice/dictionaries/refs/heads/master/{}/{}.aff",
-        dir_name.clone(),
-        dict_name.clone()
-    );
-
-    let resp = client
-        .get(api_url)
-        .send()
-        .map_err(|e| format!("HTTP error: {}", e))?;
-
-    if !resp.status().is_success() {
-        return Err(format!("GitHub returned {}", resp.status()));
-    }
-
-    let body = resp.text()
-        .map_err(|e| format!("read body: {}", e))?;
-
-    let _ = fs::write(format!("dicts/{}.aff", dict_name.clone()), &body);
+    let _ = fs::write(format!("dicts/main_{}.dict", job.to_lowercase()), &body);
 
     let status = Command::new("git")
         .args([
             "diff",
             "--quiet",
-            format!("dicts/{}.aff", dict_name.clone()).as_str()
+            format!("dicts/main_{}.dict", job.to_lowercase()).as_str()
         ])
         .status();
 
-    let changes_aff = if let Ok(status) = status {
+    let changes = if let Ok(status) = status {
         if status.success() {
             false
         } else {
@@ -140,29 +217,9 @@ fn process_dict(
         true
     };
 
-    println!("{}.aff-CHANGES={}", dict_name, changes_aff);
+    println!("{}-CHANGES={}", job, changes);
 
-    let status = Command::new("git")
-        .args([
-            "diff",
-            "--quiet",
-            format!("dicts/{}.dic", dict_name.clone()).as_str()
-        ])
-        .status();
-
-    let changes_dic = if let Ok(status) = status {
-        if status.success() {
-            false
-        } else {
-            true
-        }
-    } else {
-        true
-    };
-
-    println!("{}.dic-CHANGES={}", dict_name, changes_dic);
-
-    if !changes_aff || !changes_dic {
+    if !changes {
         // no update needed, use previous record
         return if let Ok(dict) = get_previous_json_for_dict(&job) {
             Ok(dict)
@@ -170,23 +227,7 @@ fn process_dict(
             Err(format!("No dictionary found for {}", job))
         }
     }
-    let status = Command::new("python") // this is the already existing Python code, do not convert this bit
-        .args(&[
-            "main.py",
-            &job,
-            &((time / 1000) / 60).to_string(),
-            &time.to_string(),
-            &get_description(job.clone())
-        ])
-        .status()
-        .map_err(|e| format!("Failed to run python script: {}", e))?;
-
-    if !status.success() {
-        return Err(format!(
-            "python failed for {}",
-            &job
-        ));
-    }
+    fs::copy(format!("dicts/main_{}.dict", job.to_lowercase()), format!("../../LIME/main_{}.dict", &job.to_lowercase())).unwrap();
     let data = fs::read(format!("../../LIME/main_{}.dict", &job.to_lowercase())).expect(format!("Unable to read file for {}", &job.to_lowercase()).as_str());
     let digest = md5::compute(data);
     let checksum = format!("{:x}", digest);
@@ -194,22 +235,27 @@ fn process_dict(
     let id = format!("main:{}", job.to_lowercase());
     let metadata = fs::metadata(format!("../../LIME/main_{}.dict", &job.to_lowercase())).unwrap();
     let filesize = metadata.len();
-    let dict = Dict {
+    let dict = Dictionary {
         id,
         locale: job.clone(),
         description: get_description(job.clone()),
-        update: time,
+        update: time as u128,
         filesize,
         checksum,
         url: format!("https://dot166.github.io/packages/LIME/main_{}.dict", &job.to_lowercase()),
-        version,
+        version: version as u128,
         formatversion: 86736212
     };
     Ok(dict)
 }
 
-fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
+fn build_ja_dict_via_mozc() -> Result<Dictionary, String> {
     println!("building dictionary for ja");
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    let time = since_the_epoch.as_millis();
     let status = Command::new("git")
         .args([
             "clone",
@@ -287,6 +333,17 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     if !status.success() {
         return Err("Failed to build mozc dictionary".to_string());
     }
+    let status = Command::new("bash"
+    ).args([
+        "-c",
+        "chmod 777 ../../../../LIME/mozc.data && rm -rf ../../../../LIME/mozc.data",
+    ])
+        .status()
+        .map_err(|e| format!("Failed to build mozc dictionary: {}", e))?;
+
+    if !status.success() {
+        return Err("Failed to remove old mozc dictionary".to_string());
+    }
     fs::copy("bazel-bin/data_manager/oss/mozc.data", "../../../../LIME/mozc.data").unwrap();
     env::set_current_dir(&Path::new("../..")).unwrap();
     fs::remove_dir_all("mozc").unwrap();
@@ -298,7 +355,7 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     let id = "main:ja".to_string();
     let metadata = fs::metadata("../../LIME/mozc.data").unwrap();
     let filesize = metadata.len();
-    let dict = Dict {
+    let dict = Dictionary {
         id,
         locale: "ja".to_string(),
         description: get_description("ja".to_string()),
@@ -312,55 +369,10 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     Ok(dict)
 }
 
-// should mirror function in wordlist.py, but this only contains the mappings for what I need, instead of all of them, like the python one
-fn hun_loc(loc: String, is_dir: bool) -> String {
-    if loc.len() == 2 {
-        if loc == "cs" {
-            "cs_CZ".to_string()
-        } else if loc == "en" {
-            if is_dir {
-                loc
-            } else {
-                // I want to use en_GB, but AOSP maps en to en_US, so, match it
-                println!("using en_US for locale en");
-                "en_US".to_string()
-            }
-        } else if loc == "de" {
-            if is_dir {
-                loc
-            } else {
-                "de_DE_frami".to_string()
-            }
-        } else if loc == "es" {
-            if is_dir {
-                loc
-            } else {
-                format!("{}_{}", loc, loc.to_uppercase())
-            }
-        } else if loc == "fr" {
-            if is_dir {
-                format!("{}_{}", loc, loc.to_uppercase())
-            } else {
-                loc
-            }
-        } else {
-            format!("{}_{}", loc, loc.to_uppercase())
-        }
-    } else {
-        let lang_vec: Vec<String> = loc.split("_").map(|f| f.to_string()).collect();
-        let lang = lang_vec[0].clone();
-        if lang == "en" && is_dir {
-            lang
-        } else {
-            loc
-        }
-    }
-}
-
-fn get_previous_json_for_dict(job: &String) -> Result<Dict, String> {
+fn get_previous_json_for_dict(job: &String) -> Result<Dictionary, String> {
     let json = fs::read_to_string("../../dicts.json")
         .map_err(|e| format!("json read: {}", e))?;
-    let dicts: Vec<Dict> =
+    let dicts: Vec<Dictionary> =
         serde_json::from_str(&json)
         .map_err(|e| format!("JSON parse error: {}", e))?;
     for dict in dicts {
@@ -374,12 +386,37 @@ fn get_previous_json_for_dict(job: &String) -> Result<Dict, String> {
 }
 
 fn get_description(job: String) -> String {
-    if job == "en_GB" {
-        "English (UK)".to_string()
-    } else if job == "ja" {
-        "日本語".to_string()
-    } else {
-        job // just return the code, as clearly, some unknown language slipped in here...
-    }
+    let mut log = String::new();
+    let output = Command::new("java")
+        //.current_dir(&cwd)
+        .arg("-jar")
+        .arg("kt/app.jar")
+        .arg(job)
+        .output()
+        .expect("Error getting locale");
+    log.push_str(match str::from_utf8(&output.stdout) {
+        Ok(val) => val.trim(),
+        Err(_) => panic!("got non UTF-8 data from java"),
+    });
+    log
 }
 
+fn format_locale(url: &String) -> String {
+    let regex = Regex::new("main_.*\\.").unwrap();
+    regex.captures(&*url).unwrap()[0].trim().to_string().replace("main_", "").replace(".", "")
+}
+
+fn get_loc(loc: &String) -> String {
+    if loc.len() == 2 {
+        if loc == "en" {
+            // I want to use en_gb, but AOSP maps en to en_us, so, match it
+            println!("using en_us for locale en");
+            "en_us".to_string()
+        } else {
+            loc.to_lowercase()
+            //format!("{}_{}", loc.to_lowercase(), loc.to_lowercase())
+        }
+    } else {
+        loc.to_lowercase()
+    }
+}
