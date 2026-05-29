@@ -19,6 +19,7 @@ struct Dict {
 
 fn main() {
     let contents = Vec::from([
+        // stuff I use
         "en_GB",
         "ja",
     ]);
@@ -254,10 +255,10 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     if !changes {
         fs::remove_dir_all("mozc").unwrap();
         // no update needed, use previous record
-        if let Ok(dict) = get_previous_json_for_dict(&"ja".to_string()) {
-            return Ok(dict);
+        return if let Ok(dict) = get_previous_json_for_dict(&"ja".to_string()) {
+            Ok(dict)
         } else {
-            return Err(format!("No dictionary found for ja"));
+            Err("No dictionary found for ja".to_string())
         }
     }
     env::set_current_dir(&Path::new("mozc/src")).unwrap();
@@ -311,57 +312,57 @@ fn build_ja_dict_via_mozc(time: u128) -> Result<Dict, String> {
     Ok(dict)
 }
 
-// should mirror function in wordlist.py, but this only contains the mapppings for what i need, instead of all of them, like the python one
+// should mirror function in wordlist.py, but this only contains the mappings for what I need, instead of all of them, like the python one
 fn hun_loc(loc: String, is_dir: bool) -> String {
     if loc.len() == 2 {
         if loc == "cs" {
-            return "cs_CZ".to_string();
+            "cs_CZ".to_string()
         } else if loc == "en" {
             if is_dir {
-                return loc;
+                loc
             } else {
-                // i want to use en_GB, but AOSP maps en to en_US, so, match it
+                // I want to use en_GB, but AOSP maps en to en_US, so, match it
                 println!("using en_US for locale en");
-                return "en_US".to_string();
+                "en_US".to_string()
             }
         } else if loc == "de" {
             if is_dir {
-                return loc;
+                loc
             } else {
-                return "de_DE_frami".to_string();
+                "de_DE_frami".to_string()
             }
         } else if loc == "es" {
             if is_dir {
-                return loc;
+                loc
             } else {
-                return format!("{}_{}", loc, loc.to_uppercase());
+                format!("{}_{}", loc, loc.to_uppercase())
             }
         } else if loc == "fr" {
             if is_dir {
-                return format!("{}_{}", loc, loc.to_uppercase());
+                format!("{}_{}", loc, loc.to_uppercase())
             } else {
-                return loc;
+                loc
             }
         } else {
-            return format!("{}_{}", loc, loc.to_uppercase());
+            format!("{}_{}", loc, loc.to_uppercase())
         }
     } else {
         let lang_vec: Vec<String> = loc.split("_").map(|f| f.to_string()).collect();
         let lang = lang_vec[0].clone();
         if lang == "en" && is_dir {
-            return lang;
+            lang
         } else {
-            return loc;
+            loc
         }
     }
 }
 
 fn get_previous_json_for_dict(job: &String) -> Result<Dict, String> {
     let json = fs::read_to_string("../../dicts.json")
-        .map_err(|e| format!("json read: {}", e)).unwrap();
+        .map_err(|e| format!("json read: {}", e))?;
     let dicts: Vec<Dict> =
         serde_json::from_str(&json)
-        .map_err(|e| format!("JSON parse error: {}", e)).unwrap();
+        .map_err(|e| format!("JSON parse error: {}", e))?;
     for dict in dicts {
         if &dict.locale == job {
             return Ok(dict);
@@ -374,11 +375,11 @@ fn get_previous_json_for_dict(job: &String) -> Result<Dict, String> {
 
 fn get_description(job: String) -> String {
     if job == "en_GB" {
-        return "English (UK)".to_string();
+        "English (UK)".to_string()
     } else if job == "ja" {
-        return "日本語".to_string();
+        "日本語".to_string()
     } else {
-        return job; // just return the code, as clearly, some unknown language slipped in here...
+        job // just return the code, as clearly, some unknown language slipped in here...
     }
 }
 
