@@ -30,10 +30,3 @@ export -f zopfli_preserve_time
 
 find static-tmp -regex '.+\.\(ico\|json\|sjson\|svg\)' |
     parallel -q ::: brotli zopfli_preserve_time :::: -
-
-# update tv guide for iptv
-git clone --depth 1 -b master https://github.com/iptv-org/epg.git
-cd epg
-npm install
-npm run channels:parse --- --config=./sites/freeview.co.uk/freeview.co.uk.config.js --output=./sites/freeview.co.uk/freeview.co.uk.channels.xml
-npm run grab --- --sites freeview.co.uk --maxConnections 50 --days 7 --output ../static-tmp/tv.xml
