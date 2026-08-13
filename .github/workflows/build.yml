@@ -38,7 +38,11 @@ jobs:
 
     - name: pull files from storage
       run: |
+        git lfs install
         git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/dot166/apks.git apks
+        cd apks
+        git lfs pull
+        cd ..
         cp -r apks/* ./
         chown $(whoami) apps.0.sec
         chmod 600 apps.0.sec
