@@ -106,6 +106,18 @@ jobs:
           done
         done
 
+    - name: Recombine and Decompress APK
+      run: |
+        find . -type f -name "base.apk.gz.chunk_*" | while read -r chunk_path; do
+          chunk_dir=$(dirname "$chunk_path")
+          cd "$chunk_dir"
+          echo "Processing chunks in $chunk_dir..."
+          cat base.apk.gz.chunk_* > base.apk.gz
+          gunzip base.apk.gz
+          rm -f base.apk.gz.chunk_*
+          cd - > /dev/null
+        done
+
     - name: Commit metadata
       run: |
         git add .
