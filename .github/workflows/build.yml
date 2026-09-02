@@ -106,9 +106,9 @@ jobs:
           done
         done
 
-    - name: Recombine and Decompress APK
+    - name: Recombine and Decompress Base APK
       run: |
-        find . -type f -name "base.apk.gz.chunk_*" | while read -r chunk_path; do
+        find . -type f -name "base.apk.gz.chunk_aa" | while read -r chunk_path; do
           chunk_dir=$(dirname "$chunk_path")
           cd "$chunk_dir"
           echo "Processing chunks in $chunk_dir..."
