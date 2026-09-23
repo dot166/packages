@@ -3,5 +3,7 @@ source = "Dot166"
 hasFsVeritySignatures = true
 
 description = """
-FocusLock is a recreation of Googles DigitalWellbeing package, it is not feature complete with DigitalWellbeing but it is good enough for me
+FocusLock is a recreation of Googles DigitalWellbeing package, it is not feature complete with DigitalWellbeing but it is good enough for me.
+
+WARNING!!!! This app is unmaintained, no guarantee of it working
 """
